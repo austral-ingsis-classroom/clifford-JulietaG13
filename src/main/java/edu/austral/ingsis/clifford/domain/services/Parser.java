@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Parser {
-    public static List<String> parse(String command) {
-        return Arrays.stream(command.split(" ")).toList();
-    }
+  public static List<String> parse(String command) {
+    return Arrays.stream(command.split(" ")).toList();
+  }
 }

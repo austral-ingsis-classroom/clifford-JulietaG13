@@ -1,31 +1,30 @@
 package edu.austral.ingsis.clifford.domain.interfaces;
 
 import edu.austral.ingsis.clifford.domain.entities.Directory;
-
 import java.time.Instant;
 import java.util.List;
 
 public interface FileSystemObject extends Comparable<FileSystemObject> {
-    String getName();
+  String getName();
 
-    Instant getCreationDate();
+  Instant getCreationDate();
 
-    default boolean isRoot() {
-        return getParent() == null;
-    }
+  default boolean isRoot() {
+    return getParent() == null;
+  }
 
-    void setParent(Directory parent);
+  void setParent(Directory parent);
 
-    Directory getParent();
+  Directory getParent();
 
-     default boolean hasChildren() {
-         return getChildren() != null;
-     }
+  default boolean hasChildren() {
+    return getChildren() != null;
+  }
 
-    List<FileSystemObject> getChildren();
+  List<FileSystemObject> getChildren();
 
-    @Override
-    default int compareTo(FileSystemObject other) {
-        return this.getCreationDate().compareTo(other.getCreationDate());
-    }
+  @Override
+  default int compareTo(FileSystemObject other) {
+    return this.getCreationDate().compareTo(other.getCreationDate());
+  }
 }
