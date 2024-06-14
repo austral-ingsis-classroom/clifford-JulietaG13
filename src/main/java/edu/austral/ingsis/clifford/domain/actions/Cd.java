@@ -29,13 +29,19 @@ public class Cd implements FileSystemAction {
         target = fileSystem.getRoot();
       } else {
         Directory current = fileSystem.getCurrent();
-        target =
-            switch (path.get(0)) {
-              case ".." -> current.getParent() == null ? current : current.getParent();
-              case "." -> current;
-              case "" -> moveTo(path, current, 1);
-              default -> moveTo(path, fileSystem.getRoot(), 0);
-            };
+        switch (path.get(0)) {
+          case "..":
+            target = current.getParent() == null ? current : current.getParent();
+            break;
+          case ".": 
+            target = current;
+            break;
+          case "":
+            target = moveTo(path, current, 1);
+            break;
+          default: 
+            target = moveTo(path, fileSystem.getRoot(), 0);
+        }
       }
     } catch (IllegalArgumentException ignored) {
       return "'" + command.get(1) + "' directory does not exist";
