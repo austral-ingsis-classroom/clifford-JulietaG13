@@ -22,12 +22,16 @@ public class Rm implements FileSystemAction {
       throw new IllegalArgumentException();
     }
 
-    String name =
-        switch (command.size()) {
-          case 2 -> command.get(1);
-          case 3 -> command.get(2);
-          default -> throw new IllegalArgumentException();
-        };
+    switch (command.size()) {
+      case 2: 
+        name = command.get(1);
+        break;
+      case 3: 
+        name = command.get(2);
+        break;
+      default:
+        throw new IllegalArgumentException();
+    }
 
     Directory current = fileSystem.getCurrent();
     FileSystemObject obj = Util.findByName(current, name);
