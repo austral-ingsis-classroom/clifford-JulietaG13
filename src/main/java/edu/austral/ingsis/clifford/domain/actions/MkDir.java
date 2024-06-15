@@ -1,43 +1,54 @@
 package edu.austral.ingsis.clifford.domain.actions;
 
+import edu.austral.ingsis.clifford.domain.data.Command;
 import edu.austral.ingsis.clifford.domain.entities.Directory;
 import edu.austral.ingsis.clifford.domain.entities.FileSystem;
 import edu.austral.ingsis.clifford.domain.interfaces.FileSystemAction;
-import java.util.List;
+import edu.austral.ingsis.clifford.domain.interfaces.FileSystemObject;
+import java.util.Set;
 
 public class MkDir implements FileSystemAction {
+  public static final int NAME = 0;
+
   @Override
   public String getName() {
     return "mkdir";
   }
 
   @Override
-  public String execute(List<String> command, FileSystem fileSystem) {
-    if (!isCommandValid(command)) {
-      throw new IllegalArgumentException();
+  public int getNumberOfArgs() {
+    return 1;
+  }
+
+  @Override
+  public Set<String> getValidOptions() {
+    return Set.of();
+  }
+
+  @Override
+  public String execute(Command command, FileSystem fileSystem) {
+    if (isCommandInvalid(command)) {
+      throw new IllegalArgumentException("Invalid command");
     }
 
     Directory current = fileSystem.getCurrent();
-    Directory newDir = new Directory(command.get(1));
+    String name = command.getArgs().get(NAME);
 
+    for (FileSystemObject fso : current.getChildren()) {
+      if (name.equals(fso.getName())) {
+        current.removeChild(fso);
+        break;
+      }
+    }
+
+    Directory newDir = new Directory(name);
     current.addChild(newDir);
 
     return getPrint(newDir.getName());
   }
 
   @Override
-  public boolean isCommandValid(List<String> command) {
-    return !command.isEmpty()
-        && command.get(0).equals(getName())
-        && command.size() == 2
-        && isParamValid(command.get(1));
-  }
-
-  private boolean isParamValid(String name) {
-    return !Directory.isNameInvalid(name);
-  }
-
-  private String getPrint(String name) {
+  public String getPrint(String name) {
     return "'" + name + "' directory created";
   }
 }

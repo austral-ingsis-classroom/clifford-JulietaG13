@@ -1,5 +1,6 @@
 package edu.austral.ingsis.clifford.domain.actions;
 
+import edu.austral.ingsis.clifford.domain.data.Command;
 import edu.austral.ingsis.clifford.domain.entities.Directory;
 import edu.austral.ingsis.clifford.domain.entities.FileSystem;
 import edu.austral.ingsis.clifford.domain.interfaces.FileSystemAction;
@@ -7,47 +8,84 @@ import edu.austral.ingsis.clifford.domain.interfaces.FileSystemObject;
 import edu.austral.ingsis.clifford.domain.services.Util;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class Cd implements FileSystemAction {
+  private static final int PATH = 0;
+
+  private Set<String> options = Set.of();
+
   @Override
   public String getName() {
     return "cd";
   }
 
   @Override
-  public String execute(List<String> command, FileSystem fileSystem) {
-    if (!isCommandValid(command)) {
-      throw new IllegalArgumentException();
-    }
-
-    Directory target;
-
-    try {
-      List<String> path = Arrays.stream(command.get(1).split("/")).toList();
-
-      if (command.get(1).equals("/")) {
-        target = fileSystem.getRoot();
-      } else {
-        Directory current = fileSystem.getCurrent();
-        target =
-            switch (path.get(0)) {
-              case ".." -> current.getParent() == null ? current : current.getParent();
-              case "." -> current;
-              case "" -> moveTo(path, current, 1);
-              default -> moveTo(path, fileSystem.getRoot(), 0);
-            };
-      }
-    } catch (IllegalArgumentException ignored) {
-      return "'" + command.get(1) + "' directory does not exist";
-    }
-
-    fileSystem.setCurrent(target);
-    return getPrint(target.getName());
+  public int getNumberOfArgs() {
+    return 1;
   }
 
   @Override
-  public boolean isCommandValid(List<String> command) {
-    return !command.isEmpty() && command.get(0).equals(getName()) && command.size() == 2;
+  public Set<String> getValidOptions() {
+    return options;
+  }
+
+  @Override
+  public String execute(Command command, FileSystem fileSystem) {
+    if (isCommandInvalid(command)) {
+      throw new IllegalArgumentException("Invalid command");
+    }
+
+    String pathStr = command.getArgs().get(PATH);
+
+    try {
+      List<String> path = decodePath(pathStr);
+      Directory newCurrent = getNewCurrent(path, fileSystem);
+      fileSystem.setCurrent(newCurrent);
+
+      return getPrint(newCurrent.getName());
+    } catch (Exception ignored) {
+      return "'" + pathStr + "' directory does not exist";
+    }
+  }
+
+  @Override
+  public String getPrint(String dir) {
+    return "moved to directory '" + dir + "'";
+  }
+
+  private List<String> decodePath(String path) {
+    // Arrays.stream(path.split("/")).toList()
+    String[] parts = path.split("/");
+    return Arrays.asList(parts);
+  }
+
+  private Directory getNewCurrent(List<String> path, FileSystem fileSystem) {
+    Directory current = fileSystem.getCurrent();
+    if (path.isEmpty()) {
+      return fileSystem.getRoot();
+    }
+    /*
+    target =
+        switch (path.get(0)) {
+          case ".." -> current.getParent() == null ? current : current.getParent();
+          case "." -> current;
+          case "" -> moveTo(path, current, 1);
+          default -> moveTo(path, fileSystem.getRoot(), 0);
+        };
+     */
+    String first = path.get(0);
+
+    if (first.equals("..")) {
+      return current.getParent() == null ? current : current.getParent();
+    }
+    if (first.equals(".")) {
+      return current;
+    }
+    if (first.equals("")) {
+      return moveTo(path, current, 1);
+    }
+    return moveTo(path, fileSystem.getRoot(), 0);
   }
 
   private Directory moveTo(List<String> path, Directory current, int level) {
@@ -64,9 +102,5 @@ public class Cd implements FileSystemAction {
       return moveTo(path, (Directory) next, level + 1);
     }
     throw new IllegalArgumentException();
-  }
-
-  private String getPrint(String dir) {
-    return "moved to directory '" + dir + "'";
   }
 }

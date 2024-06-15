@@ -1,0 +1,58 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class FileSystem {
+- root: Directory
+- current: Directory
+- actions: Map<String, FileSystemAction>
++ execute(String command)
+}
+FileSystem *-- FileSystemAction
+
+'-----------------------------------------
+
+interface FileSystemObject {
++ getName(): String
++ getCreationDate(): Instant
++ isRoot(): boolean
++ getParent(): Directory
++ hasChildren(): boolean
++ getChildren(): List<FileSystemObject>
+}
+
+class File implements FileSystemObject
+
+class Directory implements FileSystemObject
+
+'-----------------------------------------
+
+interface FileSystemAction {
++ getName(): String
++ getNumberOfArgs(): int
++ getValidOptions(): Set<String>
++ execute(command: Command, fileSystem: FileSystem): String
++ getPrint(String str): String
++ isCommandValid(command: Command): boolean
++ isCommandInvalid(command: Command): boolean
+}
+
+FileSystemAction *- Command
+
+class Ls implements FileSystemAction
+class Cd implements FileSystemAction
+class Touch implements FileSystemAction
+class MkDir implements FileSystemAction
+class Rm implements FileSystemAction
+class Pwd implements FileSystemAction
+
+'-----------------------------------------
+
+class Command {
++ name: String
++ args: List<String>
++ options: Set<String>
+
+- parse(command: String): Command
+}
+
+@enduml

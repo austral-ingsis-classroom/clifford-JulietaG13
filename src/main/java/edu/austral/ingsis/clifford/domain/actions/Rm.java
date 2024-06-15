@@ -1,15 +1,17 @@
 package edu.austral.ingsis.clifford.domain.actions;
 
+import edu.austral.ingsis.clifford.domain.data.Command;
 import edu.austral.ingsis.clifford.domain.entities.Directory;
 import edu.austral.ingsis.clifford.domain.entities.File;
 import edu.austral.ingsis.clifford.domain.entities.FileSystem;
 import edu.austral.ingsis.clifford.domain.interfaces.FileSystemAction;
 import edu.austral.ingsis.clifford.domain.interfaces.FileSystemObject;
-import edu.austral.ingsis.clifford.domain.services.Util;
-import java.util.List;
+import java.util.Set;
 
 public class Rm implements FileSystemAction {
-  private final List<String> options = List.of("--recursive");
+  private static final int NAME = 0;
+
+  private Set<String> options = Set.of("recursive");
 
   @Override
   public String getName() {
@@ -17,45 +19,45 @@ public class Rm implements FileSystemAction {
   }
 
   @Override
-  public String execute(List<String> command, FileSystem fileSystem) {
-    if (!isCommandValid(command)) {
-      throw new IllegalArgumentException();
-    }
-
-    String name =
-        switch (command.size()) {
-          case 2 -> command.get(1);
-          case 3 -> command.get(2);
-          default -> throw new IllegalArgumentException();
-        };
-
-    Directory current = fileSystem.getCurrent();
-    FileSystemObject obj = Util.findByName(current, name);
-
-    if (obj instanceof File) {
-      return removeFile((File) obj, current);
-    } else if (obj instanceof Directory) {
-      return removeDir((Directory) obj, current, isRecursive(command));
-    }
-    throw new IllegalArgumentException();
+  public int getNumberOfArgs() {
+    return 1;
   }
 
   @Override
-  public boolean isCommandValid(List<String> command) {
-    return !command.isEmpty()
-        && command.get(0).equals(getName())
-        && ((command.size() == 3 && isOptionValid(command.get(1))) || command.size() == 2);
+  public Set<String> getValidOptions() {
+    return options;
   }
 
-  private boolean isOptionValid(String option) {
-    return options.contains(option);
-  }
-
-  private boolean isRecursive(List<String> command) {
-    if (command.size() == 2) {
-      return false;
+  @Override
+  public String execute(Command command, FileSystem fileSystem) {
+    if (isCommandInvalid(command)) {
+      throw new IllegalArgumentException("Invalid command");
     }
-    return command.get(1).equals("--recursive");
+
+    Directory current = fileSystem.getCurrent();
+    String name = command.getArgs().get(NAME);
+
+    for (FileSystemObject fso : current.getChildren()) {
+      if (fso.getName().equals(name)) {
+        if (fso instanceof Directory) {
+          return removeDir((Directory) fso, current, command.getOptions());
+        }
+        if (fso instanceof File) {
+          return removeFile((File) fso, current);
+        }
+      }
+    }
+
+    throw new IllegalArgumentException("No such file or directory");
+  }
+
+  @Override
+  public String getPrint(String name) {
+    return "'" + name + "' removed";
+  }
+
+  private boolean isRecursive(Set<String> options) {
+    return options.contains("recursive");
   }
 
   private String removeFile(File file, Directory current) {
@@ -63,15 +65,11 @@ public class Rm implements FileSystemAction {
     return getPrint(file.getName());
   }
 
-  private String removeDir(Directory dir, Directory current, boolean isRecursive) {
-    if (isRecursive) {
+  private String removeDir(Directory dir, Directory current, Set<String> options) {
+    if (isRecursive(options)) {
       current.removeChild(dir);
       return getPrint(dir.getName());
     }
     return "cannot remove '" + dir.getName() + "', is a directory";
-  }
-
-  private String getPrint(String name) {
-    return "'" + name + "' removed";
   }
 }

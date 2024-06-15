@@ -1,12 +1,27 @@
 package edu.austral.ingsis.clifford.domain.interfaces;
 
+import edu.austral.ingsis.clifford.domain.data.Command;
 import edu.austral.ingsis.clifford.domain.entities.FileSystem;
-import java.util.List;
+import java.util.Set;
 
 public interface FileSystemAction {
   String getName();
 
-  String execute(List<String> command, FileSystem fileSystem);
+  int getNumberOfArgs();
 
-  boolean isCommandValid(List<String> command);
+  Set<String> getValidOptions();
+
+  String execute(Command command, FileSystem fileSystem);
+
+  String getPrint(String str);
+
+  default boolean isCommandValid(Command command) {
+    return command.getName().equals(getName())
+        && getValidOptions().containsAll(command.getOptions())
+        && getNumberOfArgs() == command.getArgs().size();
+  }
+
+  default boolean isCommandInvalid(Command command) {
+    return !isCommandValid(command);
+  }
 }
