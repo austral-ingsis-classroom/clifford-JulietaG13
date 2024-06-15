@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.Test;
 
 public class FileSystemTests {
@@ -15,16 +14,10 @@ public class FileSystemTests {
 
   private void executeTest(List<Map.Entry<String, String>> commandsAndResults) {
     final List<String> commands =
-            commandsAndResults
-                    .stream()
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+        commandsAndResults.stream().map(Map.Entry::getKey).collect(Collectors.toList());
 
     final List<String> expectedResult =
-            commandsAndResults
-                    .stream()
-                    .map(Map.Entry::getValue)
-                    .collect(Collectors.toList());
+        commandsAndResults.stream().map(Map.Entry::getValue).collect(Collectors.toList());
 
     final List<String> actualResult = runner.executeCommands(commands);
 
